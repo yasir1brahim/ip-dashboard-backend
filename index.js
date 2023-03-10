@@ -23,20 +23,20 @@ mongoose.connect(db_link, { useNewUrlParser: true, useUnifiedTopology: true }).t
 // GET api to fetch all the resouces.
 app.get('/api/getResources', async (req, res) => {
     try {
-      const resources = await DevResourceSchemaRecord.find();
-      res.send(resources);
+        const resources = await DevResourceSchemaRecord.find();
+        res.send(resources);
     } catch (err) {
-      console.log(err);
-      res.status(500).send('Server error');
+        console.log(err);
+        res.status(500).send('Server error');
     }
 });
 
 // POST api to create new resouces.
-app.post('/addResource',async function (req, res, next) {
-    var articles =  await DevResourceSchemaRecord.count();
-    var updateObj= {
-        'name':req.body.name,
-        'resource_id':`USER-${articles+1}`
+app.post('/addResource', async function (req, res, next) {
+    var articles = await DevResourceSchemaRecord.count();
+    var updateObj = {
+        'name': req.body.name,
+        'resource_id': `USER-${articles + 1}`
     }
     DevResourceSchemaRecord.create(updateObj).then(function (record) {
         res.send(record);
@@ -47,43 +47,56 @@ app.post('/addResource',async function (req, res, next) {
 // GET api to fetch all the resouces.
 app.get('/api/getManager', async (req, res) => {
     try {
-      const managersDocuments = await ManagerSchemaRecord.find();
-      res.send(managersDocuments);
+        const managersDocuments = await ManagerSchemaRecord.find();
+        res.send(managersDocuments);
     } catch (err) {
-      console.log(err);
-      res.status(500).send('Server error');
+        console.log(err);
+        res.status(500).send('Server error');
     }
 });
 
 // POST api to create new managers.
-app.post('/addManagers',async function (req, res, next) {
-    var managersCount =  await ManagerSchemaRecord.count();
-    var updateObj= {
-        'name':req.body.name,
-        'manager_id':`MANAGER-${managersCount+1}`
+app.post('/addManagers', async function (req, res, next) {
+    var managersCount = await ManagerSchemaRecord.count();
+    var updateObj = {
+        'name': req.body.name,
+        'manager_id': `MANAGER-${managersCount + 1}`
     }
     ManagerSchemaRecord.create(updateObj).then(function (record) {
         res.send(record);
     }).catch(next);
 })
 
+//PUT API to assign managers Project
+app.put('/api/assignManager', async function (req, res, next) {
+    var findManager = await ManagerSchemaRecord.find({ manager_id: req.body.manager_id })
+    var findProject = await ActiveProjectSchemaRecord.find({ project_id: req.body.project_id })
+    findManager[0].project_list.push(findProject[0])
+    ManagerSchemaRecord.findOneAndUpdate(
+        {  manager_id: req.body.manager_id  }, // The query to find the document and object to update
+        { $set: findManager[0] }, // The update operation
+        { new: true }
+      ).then(function(record){
+        res.send(record)
+      }).catch(next);
+})
 
 //API to get list of projects with the assigned resources.
 app.get('/api/activeProjects', async (req, res) => {
     try {
-      const activeProjectDocuments = await ActiveProjectSchemaRecord.find();
-      res.send(activeProjectDocuments);
+        const activeProjectDocuments = await ActiveProjectSchemaRecord.find();
+        res.send(activeProjectDocuments);
     } catch (err) {
-      console.log(err);
-      res.status(500).send('Server error');
+        console.log(err);
+        res.status(500).send('Server error');
     }
 });
 
-app.post('/api/createProjects',async function (req, res, next) {
-    var projectCount =  await ActiveProjectSchemaRecord.count();
-    var updateObj= {
-        'name':req.body.name,
-        'project_id':`PROJECT-${projectCount+1}`,
+app.post('/api/createProjects', async function (req, res, next) {
+    var projectCount = await ActiveProjectSchemaRecord.count();
+    var updateObj = {
+        'name': req.body.name,
+        'project_id': `PROJECT-${projectCount + 1}`,
     }
     ActiveProjectSchemaRecord.create(updateObj).then(function (record) {
         res.send(record);

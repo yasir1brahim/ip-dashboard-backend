@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 
+const subSchema = new Schema({
+    name: String,
+    project_id: String,
+    number_resources:[]
+});
 //Create Patient Sequence Schema
 const managersSchema = new Schema({
   name:{
@@ -13,10 +18,14 @@ const managersSchema = new Schema({
     required: [true, 'id is required']
   },
   project_list:{
+    type: [subSchema],
+    default: [],
   },
   resources_list:{
   }
 });
+
+
 
 
 
