@@ -5,6 +5,7 @@ var bodyParser = require('body-parser')
 var cors = require('cors')
 var fs = require('fs');
 const mongoose = require('mongoose');
+app.use(cors())
 app.use(express.json());
 const DevResourceSchemaRecord = require('../ResourceBackend/models/resources');
 const ManagerSchemaRecord = require('../ResourceBackend/models/managers');
@@ -72,13 +73,23 @@ app.put('/api/assignManager', async function (req, res, next) {
     var findManager = await ManagerSchemaRecord.find({ manager_id: req.body.manager_id })
     var findProject = await ActiveProjectSchemaRecord.find({ project_id: req.body.project_id })
     findManager[0].project_list.push(findProject[0])
+    findProject[0].project_manager.push(findManager[0])
+
+    ActiveProjectSchemaRecord.findOneAndUpdate(
+        { project_id: req.body.project_id }, // The query to find the document and object to update
+        { $set: findProject[0] }, // The update operation
+        { new: true }
+    ).then(function (value) {
+        res.send(value)
+    }).catch(next);
+
     ManagerSchemaRecord.findOneAndUpdate(
-        {  manager_id: req.body.manager_id  }, // The query to find the document and object to update
+        { manager_id: req.body.manager_id }, // The query to find the document and object to update
         { $set: findManager[0] }, // The update operation
         { new: true }
-      ).then(function(record){
+    ).then(function (record) {
         res.send(record)
-      }).catch(next);
+    }).catch(next);
 })
 
 //API to get list of projects with the assigned resources.
@@ -92,7 +103,7 @@ app.get('/api/activeProjects', async (req, res) => {
     }
 });
 
-app.post('/api/createProjects', async function (req, res, next) {
+app.post('/api/createProjects',  async function (req, res, next) {
     var projectCount = await ActiveProjectSchemaRecord.count();
     var updateObj = {
         'name': req.body.name,
