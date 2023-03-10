@@ -72,24 +72,50 @@ app.post('/addManagers', async function (req, res, next) {
 app.put('/api/assignManager', async function (req, res, next) {
     var findManager = await ManagerSchemaRecord.find({ manager_id: req.body.manager_id })
     var findProject = await ActiveProjectSchemaRecord.find({ project_id: req.body.project_id })
-    findManager[0].project_list.push(findProject[0])
-    findProject[0].project_manager.push(findManager[0])
+    var proj_value = findManager[0].project_list
+    if (proj_value.length != 0) {
+        for (let i = 0; i < proj_value.length; i++) {
+            if (proj_value[i].project_id == req.body.project_id) {
+                return res.status(404).send({ error: 'Project Already Assigned' });
+            } else {
+                findManager[0].project_list.push(findProject[0])
+                findProject[0].project_manager.push(findManager[0])
+                ActiveProjectSchemaRecord.findOneAndUpdate(
+                    { project_id: req.body.project_id }, // The query to find the document and object to update
+                    { $set: findProject[0] }, // The update operation
+                    { new: true }
+                ).then(function (value) {
+                    res.send(value)
+                }).catch(next);
 
-    ActiveProjectSchemaRecord.findOneAndUpdate(
-        { project_id: req.body.project_id }, // The query to find the document and object to update
-        { $set: findProject[0] }, // The update operation
-        { new: true }
-    ).then(function (value) {
-        res.send(value)
-    }).catch(next);
+                ManagerSchemaRecord.findOneAndUpdate(
+                    { manager_id: req.body.manager_id }, // The query to find the document and object to update
+                    { $set: findManager[0] }, // The update operation
+                    { new: true }
+                ).then(function (record) {
+                    res.send(record)
+                }).catch(next);
+            }
+        }
+    } else {
+        findManager[0].project_list.push(findProject[0])
+        findProject[0].project_manager.push(findManager[0])
+        ActiveProjectSchemaRecord.findOneAndUpdate(
+            { project_id: req.body.project_id }, // The query to find the document and object to update
+            { $set: findProject[0] }, // The update operation
+            { new: true }
+        ).then(function (value) {
+            res.send(value)
+        }).catch(next);
 
-    ManagerSchemaRecord.findOneAndUpdate(
-        { manager_id: req.body.manager_id }, // The query to find the document and object to update
-        { $set: findManager[0] }, // The update operation
-        { new: true }
-    ).then(function (record) {
-        res.send(record)
-    }).catch(next);
+        ManagerSchemaRecord.findOneAndUpdate(
+            { manager_id: req.body.manager_id }, // The query to find the document and object to update
+            { $set: findManager[0] }, // The update operation
+            { new: true }
+        ).then(function (record) {
+            res.send(record)
+        }).catch(next);
+    }
 })
 
 //API to get list of projects with the assigned resources.
@@ -103,7 +129,7 @@ app.get('/api/activeProjects', async (req, res) => {
     }
 });
 
-app.post('/api/createProjects',  async function (req, res, next) {
+app.post('/api/createProjects', async function (req, res, next) {
     var projectCount = await ActiveProjectSchemaRecord.count();
     var updateObj = {
         'name': req.body.name,
