@@ -73,48 +73,51 @@ app.put('/api/assignManager', async function (req, res, next) {
     var findManager = await ManagerSchemaRecord.find({ manager_id: req.body.manager_id })
     var findProject = await ActiveProjectSchemaRecord.find({ project_id: req.body.project_id })
     var proj_value = findManager[0].project_list
-    if (proj_value.length != 0) {
-        for (let i = 0; i < proj_value.length; i++) {
-            if (proj_value[i].project_id == req.body.project_id) {
-                return res.status(404).send({ error: 'Project Already Assigned' });
-            } else {
-                findManager[0].project_list.push(findProject[0])
-                findProject[0].project_manager.push(findManager[0])
-                ActiveProjectSchemaRecord.findOneAndUpdate(
-                    { project_id: req.body.project_id }, // The query to find the document and object to update
-                    { $set: findProject[0] }, // The update operation
-                    { new: true }
-                ).then(function (value) {
-                    res.send(value)
-                }).catch(next);
-
-                ManagerSchemaRecord.findOneAndUpdate(
-                    { manager_id: req.body.manager_id }, // The query to find the document and object to update
-                    { $set: findManager[0] }, // The update operation
-                    { new: true }
-                ).then(function (record) {
-                    res.send(record)
-                }).catch(next);
-            }
-        }
+    if (proj_value[0].project_id == req.body.project_id) {
+        res.status(400).send({ message: "Project is already assigned to this Project Manager" })
     } else {
-        findManager[0].project_list.push(findProject[0])
-        findProject[0].project_manager.push(findManager[0])
-        ActiveProjectSchemaRecord.findOneAndUpdate(
-            { project_id: req.body.project_id }, // The query to find the document and object to update
-            { $set: findProject[0] }, // The update operation
-            { new: true }
-        ).then(function (value) {
-            res.send(value)
-        }).catch(next);
+        if (proj_value.length != 0) {
+            for (let i = 0; i < proj_value.length; i++) {
+                if (proj_value[i].project_id == req.body.project_id) {
+                    return res.status(404).send({ error: 'Project Already Assigned' });
+                } else {
+                    findManager[0].project_list.push(findProject[0])
+                    findProject[0].project_manager.push(findManager[0])
+                    ActiveProjectSchemaRecord.findOneAndUpdate(
+                        { project_id: req.body.project_id }, // The query to find the document and object to update
+                        { $set: findProject[0] }, // The update operation
+                        { new: true }
+                    ).then(function (value) {
+                        res.send(value)
+                    }).catch(next);
 
-        ManagerSchemaRecord.findOneAndUpdate(
-            { manager_id: req.body.manager_id }, // The query to find the document and object to update
-            { $set: findManager[0] }, // The update operation
-            { new: true }
-        ).then(function (record) {
-            res.send(record)
-        }).catch(next);
+                    ManagerSchemaRecord.findOneAndUpdate(
+                        { manager_id: req.body.manager_id }, // The query to find the document and object to update
+                        { $set: findManager[0] }, // The update operation
+                        { new: true }
+                    ).then(function (record) {
+                        res.send(record)
+                    }).catch(next);
+                }
+            }
+        } else {
+            findManager[0].project_list.push(findProject[0])
+            findProject[0].project_manager[0]=(findManager[0])
+            ActiveProjectSchemaRecord.findOneAndUpdate(
+                { project_id: req.body.project_id }, // The query to find the document and object to update
+                { $set: findProject[0] }, // The update operation
+                { new: true }
+            ).then(function (value) {
+                res.send(value)
+            }).catch(next);
+            ManagerSchemaRecord.findOneAndUpdate(
+                { manager_id: req.body.manager_id }, // The query to find the document and object to update
+                { $set: findManager[0] }, // The update operation
+                { new: true }
+            ).then(function (record) {
+                res.send(record)
+            }).catch(next);
+        }
     }
 })
 
