@@ -73,7 +73,7 @@ app.put('/api/assignManager', async function (req, res, next) {
     var findManager = await ManagerSchemaRecord.find({ manager_id: req.body.manager_id })
     var findProject = await ActiveProjectSchemaRecord.find({ project_id: req.body.project_id })
     var proj_value = findManager[0].project_list
-    if (proj_value[0].project_id == null) {
+    if (proj_value[0].project_id != null) {
         if (proj_value[0].project_id == req.body.project_id) {
             res.status(400).send({ message: "Project is already assigned to this Project Manager" })
         } else {
